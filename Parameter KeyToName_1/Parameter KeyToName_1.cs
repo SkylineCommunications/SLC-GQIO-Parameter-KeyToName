@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Concurrent;
+using System.Timers;
 using Skyline.DataMiner.Analytics.GenericInterface;
 using Skyline.DataMiner.Net;
 using Skyline.DataMiner.Net.Messages;
+using SLDataGateway.Caching;
 
 [GQIMetaData(Name = "ParameterKeyToName")]
 public class ParameterKeyToName : IGQIRowOperator, IGQIInputArguments, IGQIColumnOperator, IGQIOnInit
@@ -103,25 +105,44 @@ public class ParameterKeyToName : IGQIRowOperator, IGQIInputArguments, IGQIColum
 
 public class ProtocolCache
 {
+    private const double ClearInterval = 60 * 60 * 1000; // 1 hour in milliseconds
     private readonly ConcurrentDictionary<String, GetProtocolInfoResponseMessage> _map = new ConcurrentDictionary<String, GetProtocolInfoResponseMessage>();
+    private readonly Timer clearTimer = new Timer(ClearInterval);
 
     public ProtocolCache()
-	{
-	}
+    {
+        clearTimer.Elapsed += OnClearTimerElapsed;
+        clearTimer.AutoReset = false; // Ensure the timer runs only once unless reset
+        clearTimer.Start();
+    }
 
     public void Cache(String key, GetProtocolInfoResponseMessage protocol)
     {
-        lock (_map)
-        {
-            _map[key] = protocol;
-        }
+        ResetTimer();
+
+        _map[key] = protocol;
     }
 
     public bool TryGet(String key, out GetProtocolInfoResponseMessage protocol)
     {
-        lock (_map)
-        {
-            return _map.TryGetValue(key, out protocol);
-        }
+        ResetTimer();
+
+        return _map.TryGetValue(key, out protocol);
+    }
+
+    private void OnClearTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        ClearCache();
+    }
+
+    private void ClearCache()
+    {
+        _map.Clear();
+    }
+
+    private void ResetTimer()
+    {
+        clearTimer.Stop();
+        clearTimer.Start();
     }
 }

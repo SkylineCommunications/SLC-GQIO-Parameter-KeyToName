@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <DMSScript options="272" xmlns="http://www.skyline.be/automation">
 	<Name>Parameter KeyToName</Name>
-	<Description>Don't use in production until the protocol cache updates upon changes. Now the cache is static, which means it clears when the GQI process (SLHelper) is stopped/recycled.</Description>
+	<Description></Description>
 	<Type>Automation</Type>
 	<Author>SKYLINE2\PVC</Author>
 	<CheckSets>FALSE</CheckSets>
