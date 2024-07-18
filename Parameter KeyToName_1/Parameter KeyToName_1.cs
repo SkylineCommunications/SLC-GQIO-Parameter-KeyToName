@@ -1,12 +1,14 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Skyline.DataMiner.Analytics.GenericInterface;
 using Skyline.DataMiner.Net;
 using Skyline.DataMiner.Net.Messages;
 
-[GQIMetaData(Name = "Parameter KeyToName")]
+[GQIMetaData(Name = "ParameterKeyToName")]
 public class ParameterKeyToName : IGQIRowOperator, IGQIInputArguments, IGQIColumnOperator, IGQIOnInit
 {
+    private static readonly ProtocolCache _protocolCache = new ProtocolCache();
+
     private readonly GQIColumnDropdownArgument _parameterKeyColumnArg = new GQIColumnDropdownArgument("Parameter Key Column") { IsRequired = true };
     private readonly GQIColumnDropdownArgument _protocolColumnArg = new GQIColumnDropdownArgument("Protocol Name") { IsRequired = false };
     private readonly GQIColumnDropdownArgument _protocolVersionColumnArg = new GQIColumnDropdownArgument("Protocol Version") { IsRequired = false };
@@ -19,7 +21,6 @@ public class ParameterKeyToName : IGQIRowOperator, IGQIInputArguments, IGQIColum
     private GQIColumn _protocolVersionColumn;
 
     private GQIDMS _dms;
-    private ProtocolCache _protocolCache = new ProtocolCache();
 
     public GQIArgument[] GetInputArguments()
     {
@@ -95,14 +96,14 @@ public class ParameterKeyToName : IGQIRowOperator, IGQIInputArguments, IGQIColum
         }
         catch (Exception)
 		{
-			row.SetValue<String>(_parameterNameColumn, "Some parameter name");
+			row.SetValue<String>(_parameterNameColumn, "<Something went wrong>");
 		}
     }
 }
 
 public class ProtocolCache
 {
-    private readonly Dictionary<String, GetProtocolInfoResponseMessage> _map = new Dictionary<String, GetProtocolInfoResponseMessage>();
+    private readonly ConcurrentDictionary<String, GetProtocolInfoResponseMessage> _map = new ConcurrentDictionary<String, GetProtocolInfoResponseMessage>();
 
     public ProtocolCache()
 	{
